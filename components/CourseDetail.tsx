@@ -73,7 +73,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ course, onBack }) => {
               Información de inscripción:
             </p>
             <p className="text-sm text-[#85666e]">
-              Acude directamente a nuestras instalaciones de 8:00 AM a 8:00 PM con tu número de folio PILARES para confirmar tu lugar.
+              Acude directamente a nuestras instalaciones de 10:00 AM a 8:00 PM con tu número de folio PILARES para confirmar tu lugar.
             </p>
           </div>
         </div>
