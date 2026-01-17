@@ -32,14 +32,8 @@ const Workshops: React.FC = () => {
           </div>
           <h1 className="font-serif text-5xl font-black text-primary">Horario Semanal</h1>
           <p className="max-w-xl text-lg text-[#85666e]">
-            Abierto de 8:00 AM a 8:00 PM. Gestiona tu aprendizaje de forma gratuita en nuestras instalaciones profesionales.
+            Abierto de 10:00 AM a 8:00 PM. Gestiona tu aprendizaje de forma gratuita en nuestras instalaciones.
           </p>
-        </div>
-        <div className="flex gap-3">
-          <button className="flex h-11 items-center gap-2 rounded-lg bg-accent-gold px-5 text-sm font-bold text-white shadow-md hover:bg-opacity-90 transition-colors">
-            <span className="material-symbols-outlined text-xl">print</span>
-            Imprimir Horario
-          </button>
         </div>
       </div>
 
