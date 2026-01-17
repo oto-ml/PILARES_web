@@ -43,7 +43,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
       </div>
       <div className="mt-12 pt-8 border-t border-white/10 text-center text-xs text-white/40">
-        © 2024 PILARES Mártires del 10 de junio. Todos los derechos reservados. Excelencia Educativa Profesional.
+        © 2026 PILARES Mártires del 10 de junio.
       </div>
     </footer>
   );
