@@ -92,7 +92,7 @@ const App: React.FC = () => {
               <div className="max-w-2xl">
                 <h1 className="text-[#171213] text-4xl md:text-5xl font-black font-serif leading-tight mb-4">Programas Educativos</h1>
                 <p className="text-[#85666e] text-lg font-normal leading-relaxed">
-                  Refina tu oficio y expande tus horizontes a través de nuestras series seleccionadas. Impartido por maestros de la industria y artesanos locales.
+                  Refina tus habilidades y expande tus horizontes a través de nuestros talleres y cursos.
                 </p>
               </div>
               <div className="flex items-center gap-3">
