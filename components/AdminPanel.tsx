@@ -56,6 +56,17 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, workshops, onUpdateCou
     setIsCourseModalOpen(false);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditingCourse({ ...editingCourse, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleEditWorkshop = (session: WorkshopSession) => {
     setEditingWorkshop(session);
     setIsWorkshopModalOpen(true);
@@ -361,13 +372,36 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, workshops, onUpdateCou
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-[#85666e] mb-1">URL Imagen</label>
-                <input 
-                  type="text" 
-                  value={editingCourse.image || ''} 
-                  onChange={e => setEditingCourse({...editingCourse, image: e.target.value})}
-                  className="w-full rounded-lg border-[#e4dcde] focus:border-primary focus:ring-primary"
-                />
+                <label className="block text-sm font-bold text-[#85666e] mb-1">Imagen del Curso</label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer bg-[#f4f1f1] hover:bg-[#e4dcde] text-[#85666e] px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
+                       <span className="material-symbols-outlined">upload_file</span>
+                       Subir Imagen
+                       <input 
+                         type="file" 
+                         accept="image/*"
+                         className="hidden"
+                         onChange={handleImageUpload}
+                       />
+                    </label>
+                    <span className="text-xs text-[#85666e] italic">o pega una URL abajo</span>
+                  </div>
+
+                  <input 
+                    type="text" 
+                    placeholder="https://..."
+                    value={editingCourse.image || ''} 
+                    onChange={e => setEditingCourse({...editingCourse, image: e.target.value})}
+                    className="w-full rounded-lg border-[#e4dcde] focus:border-primary focus:ring-primary text-sm"
+                  />
+                  
+                  {editingCourse.image && (
+                    <div className="mt-2 h-32 w-full rounded-lg overflow-hidden border border-[#e4dcde] relative bg-gray-50">
+                      <img src={editingCourse.image} alt="Vista previa" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-[#85666e] mb-1">Descripción</label>
