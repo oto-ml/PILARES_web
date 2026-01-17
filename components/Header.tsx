@@ -46,13 +46,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, onNavigate, searchQuery, on
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
-          <button 
-            onClick={() => onNavigate('admin')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'admin' ? 'bg-primary text-white' : 'text-primary hover:bg-primary/5'}`}
-          >
-            <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
-            <span className="hidden sm:inline">Admin</span>
-          </button>
+          {/* Admin button hidden */}
         </div>
       </div>
     </header>

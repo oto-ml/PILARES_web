@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -52,6 +51,22 @@ const App: React.FC = () => {
     setGlobalSearch('');
     setInstructorSearch('');
   };
+
+  // Secret key sequence detection (konami code style or simple sequence)
+  // For simplicity, let's use a simple key combo detection or a hidden trigger.
+  // We can add a hidden clickable area in the footer or keyboard shortcut.
+  
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + Alt + A to toggle admin view
+      if (e.ctrlKey && e.altKey && (e.key === 'a' || e.key === 'A')) {
+        setActiveView(prev => prev === 'admin' ? 'catalog' : 'admin');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col text-[#171213]">
@@ -211,15 +226,15 @@ const App: React.FC = () => {
 
         {activeView === 'admin' && (
           <AdminPanel 
-            courses={courses} 
-            workshops={workshops} 
-            onUpdateCourses={setCourses} 
-            onUpdateWorkshops={setWorkshops} 
+            courses={courses}
+            workshops={workshops}
+            onUpdateCourses={setCourses}
+            onUpdateWorkshops={setWorkshops}
           />
         )}
       </main>
 
-      <Footer />
+      <Footer onNavigate={handleNavigate} />
     </div>
   );
 };

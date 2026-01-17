@@ -1,11 +1,21 @@
-
 import React from 'react';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigate: (view: 'catalog' | 'workshops' | 'admin' | 'details') => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+  const handleAdminAccess = (e: React.MouseEvent) => {
+    // Triple click to enter admin (hidden feature)
+    if (e.detail === 3) {
+      onNavigate('admin');
+    }
+  };
+
   return (
     <footer className="mt-20 border-t-4 border-accent-gold bg-primary py-12 px-4 md:px-10 lg:px-40">
       <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-white/90">
-        <div>
+        <div onClick={handleAdminAccess} className="cursor-default select-none" title="© Pilares">
           <h4 className="font-serif text-2xl font-bold mb-6">PILARES Mártires del 10 de junio</h4>
           <p className="text-sm leading-relaxed text-white/70 italic">Preservando el pasado, enseñando el futuro. Desde 1924.</p>
         </div>

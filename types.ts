@@ -7,7 +7,7 @@ export interface Course {
   price: number;
   description: string;
   image: string;
-  schedule: 'Weekday Evenings' | 'Weekend Mornings' | 'Intensive Workshops';
+  schedule: string;
 }
 
 export interface Category {
