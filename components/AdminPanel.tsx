@@ -1,5 +1,5 @@
 // components/AdminPanel.tsx
-import { db } from '../firebase';
+import { db } from '../src/firebase';
 import { doc, setDoc, deleteDoc, collection } from 'firebase/firestore';
 
 // ... dentro de tu componente ...
