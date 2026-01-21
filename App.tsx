@@ -1,52 +1,52 @@
 import { useEffect, useState, useMemo } from 'react';
+// Importa la configuración de Firebase
 import { db } from './src/firebase'; 
 import { collection, getDocs } from 'firebase/firestore'; 
 import { Course, WorkshopSession } from './types';
 
-// Componentes
+// Componentes (Importaciones sin llaves porque son export default)
 import Header from './components/Header';
 import Workshops from './components/Workshops';
 import Footer from './components/Footer';
 import CourseCard from './components/CourseCard';
 import AdminPanel from './components/AdminPanel';
-import CourseDetail from './components/CourseDetail'; // ✅ Nuevo componente
+import CourseDetail from './components/CourseDetail';
 
+// Constantes
 import { CATEGORIES } from './constants';
 
 const App: React.FC = () => {
+  // --- ESTADOS DE DATOS ---
   const [courses, setCourses] = useState<Course[]>([]);
   const [workshops, setWorkshops] = useState<WorkshopSession[]>([]);
   const [loading, setLoading] = useState(true); 
   
-  // Estados de UI
+  // --- ESTADOS DE UI ---
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<'catalog' | 'workshops' | 'admin' | 'details'>('catalog');
-  
-  // Estado para el modal de detalles
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  // Carga de datos
+  // --- CARGA DE DATOS DESDE FIREBASE ---
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Cargar cursos REALES de la base de datos
+        
+        // 1. Obtener Cursos
         const coursesSnapshot = await getDocs(collection(db, "courses"));
         const coursesList = coursesSnapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         })) as Course[];
         
-        // Cargar talleres
+        // 2. Obtener Talleres (Horario)
         const workshopsSnapshot = await getDocs(collection(db, "workshops"));
         const workshopsList = workshopsSnapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         })) as WorkshopSession[];
 
-        // ✅ CORRECCIÓN: Ya no usamos FALLBACK_COURSES si la lista está vacía.
-        // Si borras todo en el admin, la web se verá vacía (que es lo correcto).
         setCourses(coursesList);
         setWorkshops(workshopsList);
 
@@ -60,6 +60,7 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
+  // --- LÓGICA DE FILTRADO (SOLO PARA CURSOS) ---
   const filteredCourses = useMemo(() => {
     return courses.filter(course => {
       const matchesCategory = selectedCategory === 'all' || 
@@ -70,9 +71,11 @@ const App: React.FC = () => {
     });
   }, [courses, selectedCategory, searchQuery]);
 
+  // --- NAVEGACIÓN ---
   const handleNavigate = (view: 'catalog' | 'workshops' | 'admin' | 'details') => {
     setActiveView(view);
     if (view === 'workshops') {
+        // Pequeño delay para asegurar que el componente se renderizó antes de scrollear
         setTimeout(() => document.getElementById('workshops-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -94,18 +97,17 @@ const App: React.FC = () => {
       
       <main className="container mx-auto px-4 py-8">
         
-     {/* PANEL ADMIN */}
+        {/* VISTA: PANEL DE ADMINISTRADOR */}
         {activeView === 'admin' && (
-          <AdminPanel 
-            courses={courses} 
-            onUpdateCourses={setCourses} 
-            // ✅ AGREGAMOS ESTAS DOS LÍNEAS NUEVAS:
-            workshops={workshops}
-            onUpdateWorkshops={setWorkshops}
-    />
-)}
+            <AdminPanel 
+                courses={courses} 
+                onUpdateCourses={setCourses}
+                workshops={workshops}           // ✅ Pasamos los talleres al admin
+                onUpdateWorkshops={setWorkshops} // ✅ Pasamos la función para actualizar talleres
+            />
+        )}
 
-        {/* CATÁLOGO */}
+        {/* VISTA: CATÁLOGO DE CURSOS */}
         {activeView === 'catalog' && (
             <>
                 <div className="mb-8 space-y-4">
@@ -135,7 +137,6 @@ const App: React.FC = () => {
                             <CourseCard 
                                 key={course.id} 
                                 course={course} 
-                                // ✅ ACCIÓN: Al hacer click, guardamos el curso en el estado para abrir el modal
                                 onSelect={(c) => setSelectedCourse(c)}
                             />
                         ))}
@@ -144,26 +145,23 @@ const App: React.FC = () => {
                         <div className="text-center py-20 bg-white rounded-lg border border-dashed border-gray-300">
                             <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">folder_open</span>
                             <p className="text-gray-500 text-lg">No hay cursos disponibles actualmente.</p>
-                            {courses.length === 0 && (
-                                <p className="text-sm text-gray-400 mt-2">
-                                    (Entra al panel de Admin para crear el primero)
-                                </p>
-                            )}
                         </div>
                     )}
                 </section>
             </>
         )}
 
-        {/* TALLERES */}
+        {/* VISTA: TALLERES / HORARIO GENERAL */}
+        {/* Se muestra si estamos en la vista 'workshops' O si estamos en 'catalog' (abajo de los cursos) */}
         <div id="workshops-section" className={activeView === 'workshops' ? 'block' : 'mt-12'}>
             {(activeView === 'workshops' || activeView === 'catalog') && (
-                <Workshops />
+                // ✅ AQUÍ ESTÁ EL CAMBIO CLAVE: Pasamos los datos reales 'sessions={workshops}'
+                <Workshops sessions={workshops} />
             )}
         </div>
       </main>
 
-      {/* ✅ MODAL DE DETALLE DEL CURSO */}
+      {/* MODAL DE DETALLE DEL CURSO */}
       {selectedCourse && (
         <CourseDetail 
             course={selectedCourse} 

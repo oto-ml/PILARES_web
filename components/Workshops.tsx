@@ -1,9 +1,13 @@
-
 import React, { useState, useMemo } from 'react';
-import { WORKSHOP_SCHEDULE } from '../constants';
+// Eliminamos la importación de WORKSHOP_SCHEDULE de constants
 import { WorkshopSession } from '../types';
 
-const Workshops: React.FC = () => {
+// Definimos que este componente espera recibir una lista de sesiones
+interface WorkshopsProps {
+  sessions: WorkshopSession[];
+}
+
+const Workshops: React.FC<WorkshopsProps> = ({ sessions }) => {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'weekly' | 'list'>('weekly');
 
@@ -11,10 +15,11 @@ const Workshops: React.FC = () => {
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
+  // USAMOS "sessions" (la prop) EN LUGAR DE LA CONSTANTE
   const filteredWorkshops = useMemo(() => {
-    if (!filterCategory) return WORKSHOP_SCHEDULE;
-    return WORKSHOP_SCHEDULE.filter(w => w.category === filterCategory);
-  }, [filterCategory]);
+    if (!filterCategory) return sessions;
+    return sessions.filter(w => w.category === filterCategory);
+  }, [filterCategory, sessions]);
 
   const sortedWorkshopsForList = useMemo(() => {
     return [...filteredWorkshops].sort((a, b) => a.day - b.day || a.hour - b.hour);
@@ -104,6 +109,7 @@ const Workshops: React.FC = () => {
                   </div>
                   
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
+                    // AQUÍ USAMOS LOS DATOS FILTRADOS
                     const dayWorkshops = filteredWorkshops.filter(w => w.day === dayIndex && w.hour === hour);
                     return (
                       <div key={dayIndex} className="p-1 border-l border-[#f4f1f1] flex flex-col gap-1 overflow-hidden group/cell relative min-h-[100px]">
