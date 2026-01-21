@@ -1,0 +1,28 @@
+mutation AddNewCourse($category: String!, $createdAt: Timestamp!, $description: String!, $imageUrl: String, $name: String!, $prerequisites: String, $price: Float!) @auth(level: USER) {
+  course_insert(data: {category: $category, createdAt: $createdAt, description: $description, imageUrl: $imageUrl, name: $name, prerequisites: $prerequisites, price: $price})
+}
+
+query ListAllCourses @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  courses {
+    id
+    name
+    description
+    category
+    price
+    imageUrl
+    prerequisites
+  }
+}
+
+mutation EnrollUserInSession($sessionId: UUID!, $userId: UUID!, $enrollmentDate: Timestamp!, $status: String!) @auth(level: USER) {
+  enrollment_insert(data: {sessionId: $sessionId, userId: $userId, enrollmentDate: $enrollmentDate, status: $status})
+}
+
+query GetUserEnrollments($userId: UUID!) @auth(level: USER) {
+  enrollments(where: {userId: {eq: $userId}}) {
+    id
+    sessionId
+    enrollmentDate
+    status
+  }
+}

@@ -1,0 +1,47 @@
+type User @table {
+  displayName: String!
+  email: String!
+  role: String!
+  createdAt: Timestamp!
+  photoUrl: String
+}
+
+type Course @table {
+  name: String!
+  description: String!
+  category: String!
+  price: Float!
+  createdAt: Timestamp!
+  prerequisites: String
+  imageUrl: String
+}
+
+type Instructor @table {
+  name: String!
+  bio: String!
+  createdAt: Timestamp!
+  email: String
+  phone: String
+}
+
+type Session @table {
+  course: Course!
+  instructor: Instructor!
+  startTime: String!
+  endTime: String!
+  startDate: Date!
+  endDate: Date!
+  maxCapacity: Int!
+  currentEnrollment: Int!
+  createdAt: Timestamp!
+  roomLocation: String
+  daysOfWeek: String
+}
+
+type Enrollment @table {
+  user: User!
+  session: Session!
+  enrollmentDate: Timestamp!
+  status: String!
+  createdAt: Timestamp!
+}
