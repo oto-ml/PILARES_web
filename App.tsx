@@ -1,14 +1,14 @@
 import { useEffect, useState, useMemo } from 'react';
-// Importación de Firebase (Asegúrate que la ruta sea correcta según tu estructura)
 import { db } from './src/firebase'; 
 import { collection, getDocs } from 'firebase/firestore'; 
 import { Course, WorkshopSession } from './types';
 
-// ✅ CORRECCIÓN AQUÍ: Importaciones sin llaves { } porque son export default
+// Componentes
 import Header from './components/Header';
 import Workshops from './components/Workshops';
 import Footer from './components/Footer';
 import CourseCard from './components/CourseCard';
+import AdminPanel from './components/AdminPanel'; // ✅ Faltaba importar esto
 
 import { CATEGORIES, COURSES as FALLBACK_COURSES, WORKSHOP_SCHEDULE as FALLBACK_WORKSHOPS } from './constants';
 
@@ -20,20 +20,19 @@ const App: React.FC = () => {
   // Estados de UI
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeView, setActiveView] = useState<'catalog' | 'workshops' | 'admin' | 'details'>('catalog');
 
   // Carga de datos
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Cargar cursos
         const coursesSnapshot = await getDocs(collection(db, "courses"));
         const coursesList = coursesSnapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         })) as Course[];
         
-        // Cargar talleres
         const workshopsSnapshot = await getDocs(collection(db, "workshops"));
         const workshopsList = workshopsSnapshot.docs.map(doc => ({ 
             id: doc.id, 
@@ -55,7 +54,6 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
-  // Lógica de Filtros
   const filteredCourses = useMemo(() => {
     return courses.filter(course => {
       const matchesCategory = selectedCategory === 'all' || 
@@ -66,13 +64,10 @@ const App: React.FC = () => {
     });
   }, [courses, selectedCategory, searchQuery]);
 
-  // Navegación simple (Placeholder para que el Header funcione)
-  const [activeView, setActiveView] = useState<'catalog' | 'workshops' | 'admin' | 'details'>('catalog');
   const handleNavigate = (view: 'catalog' | 'workshops' | 'admin' | 'details') => {
     setActiveView(view);
-    // Aquí podrías agregar lógica para scrollear a la sección correspondiente
     if (view === 'workshops') {
-        document.getElementById('workshops-section')?.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => document.getElementById('workshops-section')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -92,7 +87,16 @@ const App: React.FC = () => {
       />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Sección de Filtros (Solo visible en vista catálogo) */}
+        
+        {/* VISTA: PANEL DE ADMINISTRADOR (✅ Agregado) */}
+        {activeView === 'admin' && (
+            <AdminPanel 
+                courses={courses} 
+                onUpdateCourses={setCourses} 
+            />
+        )}
+
+        {/* VISTA: CATÁLOGO DE CURSOS */}
         {activeView === 'catalog' && (
             <>
                 <div className="mb-8 space-y-4">
@@ -135,7 +139,7 @@ const App: React.FC = () => {
             </>
         )}
 
-        {/* Sección de Talleres */}
+        {/* VISTA: TALLERES (Siempre visible abajo o solo en vista workshops) */}
         <div id="workshops-section" className={activeView === 'workshops' ? 'block' : 'mt-12'}>
             {(activeView === 'workshops' || activeView === 'catalog') && (
                 <Workshops />
