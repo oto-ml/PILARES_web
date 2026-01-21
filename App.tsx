@@ -94,13 +94,16 @@ const App: React.FC = () => {
       
       <main className="container mx-auto px-4 py-8">
         
-        {/* PANEL ADMIN */}
+     {/* PANEL ADMIN */}
         {activeView === 'admin' && (
-            <AdminPanel 
-                courses={courses} 
-                onUpdateCourses={setCourses} 
-            />
-        )}
+          <AdminPanel 
+            courses={courses} 
+            onUpdateCourses={setCourses} 
+            // ✅ AGREGAMOS ESTAS DOS LÍNEAS NUEVAS:
+            workshops={workshops}
+            onUpdateWorkshops={setWorkshops}
+    />
+)}
 
         {/* CATÁLOGO */}
         {activeView === 'catalog' && (
