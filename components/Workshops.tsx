@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-// Eliminamos la importación de WORKSHOP_SCHEDULE de constants
+// Eliminamos la importación de WORKSHOP_SCHEDULE de constants porque ya no la usamos
 import { WorkshopSession } from '../types';
 
-// Definimos que este componente espera recibir una lista de sesiones
+// Definimos que este componente espera recibir una lista de sesiones (props)
 interface WorkshopsProps {
   sessions: WorkshopSession[];
 }
@@ -15,10 +15,13 @@ const Workshops: React.FC<WorkshopsProps> = ({ sessions }) => {
   const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
-  // USAMOS "sessions" (la prop) EN LUGAR DE LA CONSTANTE
+  // USAMOS "sessions" (la prop que viene de la BD) EN LUGAR DE LA CONSTANTE ESTÁTICA
   const filteredWorkshops = useMemo(() => {
-    if (!filterCategory) return sessions;
-    return sessions.filter(w => w.category === filterCategory);
+    // Si sessions viene vacío o undefined, evitamos errores devolviendo array vacío
+    const currentSessions = sessions || [];
+    
+    if (!filterCategory) return currentSessions;
+    return currentSessions.filter(w => w.category === filterCategory);
   }, [filterCategory, sessions]);
 
   const sortedWorkshopsForList = useMemo(() => {
@@ -109,7 +112,6 @@ const Workshops: React.FC<WorkshopsProps> = ({ sessions }) => {
                   </div>
                   
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
-                    // AQUÍ USAMOS LOS DATOS FILTRADOS
                     const dayWorkshops = filteredWorkshops.filter(w => w.day === dayIndex && w.hour === hour);
                     return (
                       <div key={dayIndex} className="p-1 border-l border-[#f4f1f1] flex flex-col gap-1 overflow-hidden group/cell relative min-h-[100px]">
