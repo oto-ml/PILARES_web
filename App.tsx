@@ -8,9 +8,10 @@ import Header from './components/Header';
 import Workshops from './components/Workshops';
 import Footer from './components/Footer';
 import CourseCard from './components/CourseCard';
-import AdminPanel from './components/AdminPanel'; // ✅ Faltaba importar esto
+import AdminPanel from './components/AdminPanel';
+import CourseDetail from './components/CourseDetail'; // ✅ Nuevo componente
 
-import { CATEGORIES, COURSES as FALLBACK_COURSES, WORKSHOP_SCHEDULE as FALLBACK_WORKSHOPS } from './constants';
+import { CATEGORIES } from './constants';
 
 const App: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -21,31 +22,36 @@ const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<'catalog' | 'workshops' | 'admin' | 'details'>('catalog');
+  
+  // Estado para el modal de detalles
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   // Carga de datos
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Cargar cursos REALES de la base de datos
         const coursesSnapshot = await getDocs(collection(db, "courses"));
         const coursesList = coursesSnapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         })) as Course[];
         
+        // Cargar talleres
         const workshopsSnapshot = await getDocs(collection(db, "workshops"));
         const workshopsList = workshopsSnapshot.docs.map(doc => ({ 
             id: doc.id, 
             ...doc.data() 
         })) as WorkshopSession[];
 
-        setCourses(coursesList.length > 0 ? coursesList : FALLBACK_COURSES);
-        setWorkshops(workshopsList.length > 0 ? workshopsList : FALLBACK_WORKSHOPS);
+        // ✅ CORRECCIÓN: Ya no usamos FALLBACK_COURSES si la lista está vacía.
+        // Si borras todo en el admin, la web se verá vacía (que es lo correcto).
+        setCourses(coursesList);
+        setWorkshops(workshopsList);
 
       } catch (error) {
         console.error("Error cargando datos:", error);
-        setCourses(FALLBACK_COURSES);
-        setWorkshops(FALLBACK_WORKSHOPS);
       } finally {
         setLoading(false);
       }
@@ -88,7 +94,7 @@ const App: React.FC = () => {
       
       <main className="container mx-auto px-4 py-8">
         
-        {/* VISTA: PANEL DE ADMINISTRADOR (✅ Agregado) */}
+        {/* PANEL ADMIN */}
         {activeView === 'admin' && (
             <AdminPanel 
                 courses={courses} 
@@ -96,7 +102,7 @@ const App: React.FC = () => {
             />
         )}
 
-        {/* VISTA: CATÁLOGO DE CURSOS */}
+        {/* CATÁLOGO */}
         {activeView === 'catalog' && (
             <>
                 <div className="mb-8 space-y-4">
@@ -126,26 +132,41 @@ const App: React.FC = () => {
                             <CourseCard 
                                 key={course.id} 
                                 course={course} 
-                                onSelect={(c) => console.log("Curso seleccionado:", c)}
+                                // ✅ ACCIÓN: Al hacer click, guardamos el curso en el estado para abrir el modal
+                                onSelect={(c) => setSelectedCourse(c)}
                             />
                         ))}
                     </div>
                     {filteredCourses.length === 0 && (
-                        <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300">
-                            <p className="text-gray-500">No se encontraron cursos con esos filtros.</p>
+                        <div className="text-center py-20 bg-white rounded-lg border border-dashed border-gray-300">
+                            <span className="material-symbols-outlined text-6xl text-gray-300 mb-4">folder_open</span>
+                            <p className="text-gray-500 text-lg">No hay cursos disponibles actualmente.</p>
+                            {courses.length === 0 && (
+                                <p className="text-sm text-gray-400 mt-2">
+                                    (Entra al panel de Admin para crear el primero)
+                                </p>
+                            )}
                         </div>
                     )}
                 </section>
             </>
         )}
 
-        {/* VISTA: TALLERES (Siempre visible abajo o solo en vista workshops) */}
+        {/* TALLERES */}
         <div id="workshops-section" className={activeView === 'workshops' ? 'block' : 'mt-12'}>
             {(activeView === 'workshops' || activeView === 'catalog') && (
                 <Workshops />
             )}
         </div>
       </main>
+
+      {/* ✅ MODAL DE DETALLE DEL CURSO */}
+      {selectedCourse && (
+        <CourseDetail 
+            course={selectedCourse} 
+            onClose={() => setSelectedCourse(null)} 
+        />
+      )}
 
       <Footer onNavigate={handleNavigate} />
     </div>
