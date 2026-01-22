@@ -1,7 +1,8 @@
 import React from 'react';
+import { ViewState } from '../types';
 
 interface FooterProps {
-  onNavigate: (view: 'catalog' | 'workshops' | 'admin' | 'details') => void;
+  onNavigate: (view: ViewState) => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onNavigate }) => {

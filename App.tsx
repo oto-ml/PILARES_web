@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { db } from './src/firebase'; 
 import { collection, getDocs } from 'firebase/firestore'; 
-import { Course, WorkshopSession } from './types';
+import { Course, WorkshopSession, ViewState } from './types';
 
 import Header from './components/Header';
 import Workshops from './components/Workshops';
@@ -18,7 +18,7 @@ const App: React.FC = () => {
   
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeView, setActiveView] = useState<'catalog' | 'workshops' | 'admin' | 'details'>('catalog');
+  const [activeView, setActiveView] = useState<ViewState>('catalog');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const App: React.FC = () => {
     });
   }, [courses, selectedCategory, searchQuery]);
 
-  const handleNavigate = (view: any) => {
+  const handleNavigate = (view: ViewState) => {
     setActiveView(view);
     if (view === 'workshops') {
         setTimeout(() => document.getElementById('workshops-section')?.scrollIntoView({ behavior: 'smooth' }), 100);

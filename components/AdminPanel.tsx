@@ -4,12 +4,16 @@ import { doc, setDoc, deleteDoc, collection, writeBatch } from 'firebase/firesto
 import { Course, WorkshopSession } from '../types';
 import { COURSES, WORKSHOP_SCHEDULE } from '../constants';
 
-interface AdminPanelProps {
-  courses: Course[];
-  onUpdateCourses: (c: Course[]) => void;
-  workshops: WorkshopSession[];
-  onUpdateWorkshops: (w: WorkshopSession[]) => void;
-}
+// Helper para formatear hora decimal a string
+const formatTimeRange = (startHour: number, duration: number) => {
+    const end = startHour + duration;
+    const format = (h: number) => {
+        const hour = Math.floor(h);
+        const minutes = (h - hour) * 60;
+        return `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    };
+    return `${format(startHour)} - ${format(end)}`;
+};
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, workshops, onUpdateWorkshops }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,6 +24,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
 
   const [currentCourse, setCurrentCourse] = useState<Partial<Course>>({});
   const [currentWorkshop, setCurrentWorkshop] = useState<Partial<WorkshopSession>>({});
+
+  // Estados para creación simultánea en horario
+  const [addToSchedule, setAddToSchedule] = useState(false);
+  const [scheduleEntries, setScheduleEntries] = useState<{day: number, hour: number, duration: number}[]>([{day: 0, hour: 10, duration: 2}]);
 
   // --- LOGICA DE COLORES ---
   const getCategoryBadgeStyle = (category: string = '') => {
@@ -54,11 +62,48 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
   const saveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    const id = currentCourse.id || doc(collection(db, "courses")).id;
-    const data = { ...currentCourse, id, price: 0 } as Course;
-    await setDoc(doc(db, "courses", id), data);
-    onUpdateCourses(currentCourse.id ? courses.map(c => c.id === id ? data : c) : [...courses, data]);
-    setIsEditing(false);
+
+    try {
+      const batch = writeBatch(db);
+      
+      // 1. Guardar Curso
+      const courseId = currentCourse.id || doc(collection(db, "courses")).id;
+      const category = currentCourse.category || 'Cultura';
+      const courseData = { ...currentCourse, id: courseId, category, price: 0 } as Course;
+      batch.set(doc(db, "courses", courseId), courseData);
+
+      // 2. (Opcional) Guardar Taller en Horario
+      const createdWorkshops: WorkshopSession[] = [];
+      if (addToSchedule && !currentCourse.id) { // Solo al crear uno nuevo para evitar duplicados al editar
+        scheduleEntries.forEach(entry => {
+          const workshopId = doc(collection(db, "workshops")).id;
+          const newWorkshop: WorkshopSession = {
+            id: workshopId,
+            title: currentCourse.title || 'Curso',
+            category: category as any,
+            day: entry.day,
+            hour: entry.hour,
+            timeString: formatTimeRange(entry.hour, entry.duration),
+          };
+          batch.set(doc(db, "workshops", workshopId), newWorkshop);
+          createdWorkshops.push(newWorkshop);
+        });
+      }
+
+      await batch.commit();
+
+      // Actualizar estado local
+      onUpdateCourses(currentCourse.id ? courses.map(c => c.id === courseId ? courseData : c) : [...courses, courseData]);
+      if (createdWorkshops.length > 0) {
+        onUpdateWorkshops([...workshops, ...createdWorkshops]);
+        alert(`¡Curso y ${createdWorkshops.length} horario(s) creados exitosamente!`);
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error(error);
+      alert("Error al guardar");
+    }
     setSaving(false);
   };
 
@@ -70,6 +115,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
     const start = currentWorkshop.hour || 10;
     const data = { 
         ...currentWorkshop, id, 
+        // Fix: Ensure category is set
+        category: currentWorkshop.category || 'Cultura',
         timeString: currentWorkshop.timeString || `${start}:00 - ${start+2}:00` 
     } as WorkshopSession;
     await setDoc(doc(db, "workshops", id), data);
@@ -132,7 +179,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
         </button>
       </div>
 
-      <button onClick={() => { setActiveTab(activeTab); setIsEditing(true); setCurrentCourse({}); setCurrentWorkshop({}); }} 
+      <button onClick={() => { setActiveTab(activeTab); setIsEditing(true); setCurrentCourse({}); setCurrentWorkshop({}); setAddToSchedule(false); setScheduleEntries([{day: 0, hour: 10, duration: 2}]); }} 
         className="bg-green-600 text-white px-6 py-3 rounded-lg mb-6 flex items-center gap-2 shadow-md hover:bg-green-700 transition-all transform hover:scale-[1.02] font-bold">
         <span className="material-symbols-outlined">add_circle</span> 
         Nuevo {activeTab === 'courses' ? 'Curso' : 'Taller'}
@@ -212,6 +259,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
                 <div className="p-8">
                     {activeTab === 'courses' ? (
                         <form onSubmit={saveCourse} className="space-y-5">
+                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 text-sm text-blue-800 mb-2 flex items-start gap-2">
+                                <span className="material-symbols-outlined text-lg">info</span>
+                                <p><strong>Nota:</strong> Los cursos creados aquí aparecen en el <strong>Catálogo</strong>. Para que aparezcan en el <strong>Horario General</strong>, debes crear también un registro en la pestaña de <strong>Horario General</strong> (Talleres).</p>
+                            </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Título del Curso</label>
                                 <input className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Ej: Pintura al Óleo" required value={currentCourse.title || ''} onChange={e=>setCurrentCourse({...currentCourse, title: e.target.value})} />
@@ -241,6 +292,104 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ courses, onUpdateCourses, works
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Horario (Texto)</label>
                                 <input className="w-full border border-gray-300 p-3 rounded-lg" placeholder="Ej: Lunes y Miércoles 16:00 - 18:00" value={currentCourse.schedule || ''} onChange={e=>setCurrentCourse({...currentCourse, schedule: e.target.value})} />
                             </div>
+
+                            {/* OPCION DE AGREGAR AL HORARIO AUTOMATICAMENTE */}
+                            {!currentCourse.id && ( // Solo mostrar al crear nuevo
+                                <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <input 
+                                            type="checkbox" 
+                                            id="addToSchedule" 
+                                            checked={addToSchedule} 
+                                            onChange={e => setAddToSchedule(e.target.checked)} 
+                                            className="w-5 h-5 text-primary rounded focus:ring-primary"
+                                        />
+                                        <label htmlFor="addToSchedule" className="font-bold text-gray-800 cursor-pointer select-none">
+                                            Agregar automáticamente al Horario General
+                                        </label>
+                                    </div>
+                                    
+                                    {addToSchedule && (
+                                        <div className="space-y-3 mt-3 animate-in fade-in slide-in-from-top-2">
+                                            {scheduleEntries.map((entry, index) => (
+                                                <div key={index} className="flex gap-2 items-end">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-bold text-gray-600 mb-1">Día {index + 1}</label>
+                                                        <select 
+                                                            className="w-full border border-gray-300 p-2 rounded-lg text-sm" 
+                                                            value={entry.day} 
+                                                            onChange={e => {
+                                                                const newEntries = [...scheduleEntries];
+                                                                newEntries[index].day = Number(e.target.value);
+                                                                setScheduleEntries(newEntries);
+                                                            }}
+                                                        >
+                                                            {['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'].map((d,i)=><option key={i} value={i}>{d}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex-1 min-w-[120px]">
+                                                        <label className="block text-xs font-bold text-gray-600 mb-1">Hora Inicio</label>
+                                                        <select 
+                                                            className="w-full border border-gray-300 p-2 rounded-lg text-sm" 
+                                                            value={entry.hour} 
+                                                            onChange={e => {
+                                                                const newEntries = [...scheduleEntries];
+                                                                newEntries[index].hour = Number(e.target.value);
+                                                                setScheduleEntries(newEntries);
+                                                            }}
+                                                        >
+                                                            {Array.from({length: 13}, (_, i) => i + 8).map(h => (
+                                                                <>
+                                                                    <option key={h} value={h}>{h}:00</option>
+                                                                    <option key={`${h}.5`} value={h + 0.5}>{h}:30</option>
+                                                                </>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="flex-1 min-w-[100px]">
+                                                        <label className="block text-xs font-bold text-gray-600 mb-1">Duración</label>
+                                                        <select 
+                                                            className="w-full border border-gray-300 p-2 rounded-lg text-sm" 
+                                                            value={entry.duration} 
+                                                            onChange={e => {
+                                                                const newEntries = [...scheduleEntries];
+                                                                newEntries[index].duration = Number(e.target.value);
+                                                                setScheduleEntries(newEntries);
+                                                            }}
+                                                        >
+                                                            <option value={1}>1.0 h</option>
+                                                            <option value={1.5}>1.5 h</option>
+                                                            <option value={2}>2.0 h</option>
+                                                            <option value={2.5}>2.5 h</option>
+                                                            <option value={3}>3.0 h</option>
+                                                            <option value={4}>4.0 h</option>
+                                                        </select>
+                                                    </div>
+                                                    {scheduleEntries.length > 1 && (
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setScheduleEntries(scheduleEntries.filter((_, i) => i !== index))}
+                                                            className="bg-red-50 text-red-500 p-2.5 rounded-lg hover:bg-red-100 transition-colors"
+                                                            title="Eliminar horario"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">remove</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setScheduleEntries([...scheduleEntries, { day: 0, hour: 10, duration: 2 }])}
+                                                className="w-full py-2 bg-orange-100 text-orange-700 font-bold rounded-lg text-sm hover:bg-orange-200 transition-colors flex items-center justify-center gap-1"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">add_circle</span>
+                                                Agregar otro día/horario
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Descripción</label>

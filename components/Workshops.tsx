@@ -6,7 +6,7 @@ interface WorkshopsProps {
 }
 
 const Workshops: React.FC<WorkshopsProps> = ({ sessions }) => {
-  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<WorkshopSession['category'] | null>(null);
   const [viewMode, setViewMode] = useState<'weekly' | 'list'>('weekly');
 
   const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8:00 a 20:00
@@ -86,7 +86,8 @@ const Workshops: React.FC<WorkshopsProps> = ({ sessions }) => {
                   </div>
                   
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
-                    const dayWorkshops = filteredWorkshops.filter(w => w.day === dayIndex && w.hour === hour);
+                    // Fix: Comparar usando floor para agrupar medias horas en la misma celda visual
+                    const dayWorkshops = filteredWorkshops.filter(w => w.day === dayIndex && Math.floor(w.hour) === hour);
                     return (
                       <div key={dayIndex} className="p-1 border-l flex flex-col gap-1 hover:bg-gray-50/30 transition-colors">
                         {dayWorkshops.map(workshop => (
@@ -147,7 +148,7 @@ interface WorkshopItemProps {
 
 const WorkshopItem: React.FC<WorkshopItemProps> = ({ category, title, time, seats }) => {
   
-  // ✅ AQUÍ ESTÁ EL DEBUG: Mapeamos la categoría a estilos visuales específicos
+  // Mapeamos la categoría a estilos visuales específicos
   const getCategoryStyles = (cat: string) => {
     switch (cat) {
       case 'Cultura':

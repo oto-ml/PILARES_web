@@ -1,9 +1,10 @@
 
 import React from 'react';
+import { ViewState } from '../types';
 
 interface HeaderProps {
-  activeView: 'catalog' | 'workshops' | 'admin' | 'details';
-  onNavigate: (view: 'catalog' | 'workshops' | 'admin' | 'details') => void;
+  activeView: ViewState;
+  onNavigate: (view: ViewState) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }

@@ -27,3 +27,5 @@ export interface WorkshopSession {
   type?: 'primary' | 'muted' | 'gold';
   seats?: string;
 }
+
+export type ViewState = 'catalog' | 'workshops' | 'admin' | 'details';
