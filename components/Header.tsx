@@ -12,8 +12,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ activeView, onNavigate, searchQuery, onSearchChange }) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-solid border-[#e4dcde] bg-[#fdfdfb]/95 backdrop-blur-sm px-4 md:px-10 lg:px-40 py-3">
-      <div className="max-w-[1440px] mx-auto flex items-center justify-between whitespace-nowrap">
-        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full md:w-auto">
+      <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-0 w-full">
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 w-full lg:w-auto">
           <div className="flex items-center gap-3 cursor-pointer self-start md:self-auto" onClick={() => onNavigate('catalog')}>
             <div className="size-8 bg-primary rounded flex items-center justify-center text-white shrink-0">
               <span className="material-symbols-outlined text-xl">account_balance</span>
@@ -37,8 +37,8 @@ const Header: React.FC<HeaderProps> = ({ activeView, onNavigate, searchQuery, on
             </button>
           </nav>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="hidden lg:block relative min-w-64">
+        <div className="flex items-center gap-6 w-full lg:w-auto">
+          <div className="relative w-full lg:w-auto lg:min-w-64">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-accent-gold text-lg">search</span>
             <input 
               className="w-full bg-[#f4f1f1] border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-accent-gold" 

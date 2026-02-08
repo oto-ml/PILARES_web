@@ -33,7 +33,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ course, onClose }) => {
         </div>
 
         {/* Contenido */}
-        <div className="p-8 overflow-y-auto">
+        <div className="p-4 md:p-8 overflow-y-auto">
           <h2 className="text-3xl font-serif font-bold text-primary mb-2">{course.title}</h2>
           <p className="text-gray-500 font-medium mb-6 text-lg">Impartido por: <span className="text-gray-800">{course.instructor}</span></p>
 
